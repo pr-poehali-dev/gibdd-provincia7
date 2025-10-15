@@ -1,33 +1,119 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
+const API_URL = 'https://functions.poehali.dev/59f4d93b-77eb-4d12-b475-756c7d1b684e';
+
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminToken, setAdminToken] = useState('');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showNewsEditor, setShowNewsEditor] = useState(false);
+  const [editingNews, setEditingNews] = useState<any>(null);
+  const [newsForm, setNewsForm] = useState({ title: '', description: '', content: '', date: '' });
 
-  const newsItems = [
-    {
-      id: 1,
-      date: '15 октября 2025',
-      title: 'Профилактическое мероприятие "Безопасная дорога"',
-      description: 'В период с 20 по 25 октября будет проведено профилактическое мероприятие, направленное на снижение аварийности.',
-    },
-    {
-      id: 2,
-      date: '12 октября 2025',
-      title: 'Совещание руководящего состава',
-      description: 'Состоялось ежемесячное совещание по итогам работы за сентябрь 2025 года.',
-    },
-    {
-      id: 3,
-      date: '8 октября 2025',
-      title: 'Награждение лучших сотрудников',
-      description: 'За образцовое выполнение служебных обязанностей награждены 5 сотрудников подразделения.',
-    },
-  ];
+  useEffect(() => {
+    fetchNews();
+  }, []);
+
+  const fetchNews = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      setNewsItems(data.news || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    if (adminToken === 'admin123') {
+      setIsAdmin(true);
+      setShowAdminLogin(false);
+    } else {
+      alert('Неверный токен');
+    }
+  };
+
+  const handleCreateNews = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': adminToken,
+        },
+        body: JSON.stringify(newsForm),
+      });
+      if (response.ok) {
+        await fetchNews();
+        setShowNewsEditor(false);
+        setNewsForm({ title: '', description: '', content: '', date: '' });
+      }
+    } catch (error) {
+      console.error('Error creating news:', error);
+    }
+  };
+
+  const handleUpdateNews = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': adminToken,
+        },
+        body: JSON.stringify({ ...newsForm, id: editingNews.id }),
+      });
+      if (response.ok) {
+        await fetchNews();
+        setShowNewsEditor(false);
+        setEditingNews(null);
+        setNewsForm({ title: '', description: '', content: '', date: '' });
+      }
+    } catch (error) {
+      console.error('Error updating news:', error);
+    }
+  };
+
+  const handleDeleteNews = async (id: number) => {
+    if (!confirm('Удалить новость?')) return;
+    try {
+      const response = await fetch(`${API_URL}?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Token': adminToken,
+        },
+      });
+      if (response.ok) {
+        await fetchNews();
+      }
+    } catch (error) {
+      console.error('Error deleting news:', error);
+    }
+  };
+
+  const openEditNews = (news: any) => {
+    setEditingNews(news);
+    setNewsForm({
+      title: news.title,
+      description: news.description,
+      content: news.content || '',
+      date: news.date,
+    });
+    setShowNewsEditor(true);
+  };
+
+  const openCreateNews = () => {
+    setEditingNews(null);
+    setNewsForm({ title: '', description: '', content: '', date: '' });
+    setShowNewsEditor(true);
+  };
 
   const leadershipItems = [
     {
@@ -177,32 +263,60 @@ const Index = () => {
 
       case 'news':
         return (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Icon name="Newspaper" className="text-primary" size={28} />
-                <CardTitle className="text-2xl">Новости</CardTitle>
-              </div>
-              <CardDescription>Актуальные новости подразделения</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {newsItems.map((news, index) => (
-                <div key={news.id}>
-                  {index > 0 && <Separator className="my-6" />}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{news.date}</Badge>
-                    </div>
-                    <h3 className="font-bold text-xl">{news.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{news.description}</p>
-                    <Button variant="link" className="p-0 h-auto text-primary">
-                      Читать полностью →
+          <div className="space-y-6">
+            {isAdmin && (
+              <Card className="border-secondary">
+                <CardHeader className="bg-secondary/10">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">Панель администратора</CardTitle>
+                    <Button onClick={openCreateNews} size="sm">
+                      <Icon name="Plus" size={16} className="mr-2" />
+                      Создать новость
                     </Button>
                   </div>
+                </CardHeader>
+              </Card>
+            )}
+            
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Icon name="Newspaper" className="text-primary" size={28} />
+                  <CardTitle className="text-2xl">Новости</CardTitle>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+                <CardDescription>Актуальные новости подразделения</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {newsItems.map((news, index) => (
+                  <div key={news.id}>
+                    {index > 0 && <Separator className="my-6" />}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{news.date}</Badge>
+                      </div>
+                      <h3 className="font-bold text-xl">{news.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed">{news.description}</p>
+                      {news.content && (
+                        <p className="text-sm text-muted-foreground mt-2">{news.content}</p>
+                      )}
+                      {isAdmin && (
+                        <div className="flex gap-2 mt-3">
+                          <Button onClick={() => openEditNews(news)} variant="outline" size="sm">
+                            <Icon name="Edit" size={16} className="mr-2" />
+                            Редактировать
+                          </Button>
+                          <Button onClick={() => handleDeleteNews(news.id)} variant="destructive" size="sm">
+                            <Icon name="Trash2" size={16} className="mr-2" />
+                            Удалить
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         );
 
       case 'cpp':
@@ -373,6 +487,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Официальный портал</p>
               </div>
             </div>
+            <Button
+              variant={isAdmin ? 'destructive' : 'outline'}
+              size="sm"
+              onClick={() => isAdmin ? setIsAdmin(false) : setShowAdminLogin(true)}
+            >
+              <Icon name={isAdmin ? 'LogOut' : 'Lock'} size={16} className="mr-2" />
+              {isAdmin ? 'Выход' : 'Вход'}
+            </Button>
           </div>
           
           <nav className="flex flex-wrap gap-2">
@@ -423,6 +545,103 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {renderContent()}
       </main>
+
+      {showAdminLogin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Вход администратора</CardTitle>
+              <CardDescription>Введите токен доступа</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Токен доступа</label>
+                <input
+                  type="password"
+                  value={adminToken}
+                  onChange={(e) => setAdminToken(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Введите токен"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAdminLogin} className="flex-1">
+                  Войти
+                </Button>
+                <Button onClick={() => setShowAdminLogin(false)} variant="outline" className="flex-1">
+                  Отмена
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showNewsEditor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <Card className="w-full max-w-2xl my-8">
+            <CardHeader>
+              <CardTitle>{editingNews ? 'Редактировать новость' : 'Создать новость'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Заголовок</label>
+                <input
+                  type="text"
+                  value={newsForm.title}
+                  onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Краткое описание</label>
+                <textarea
+                  value={newsForm.description}
+                  onChange={(e) => setNewsForm({ ...newsForm, description: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md min-h-[80px]"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Полный текст</label>
+                <textarea
+                  value={newsForm.content}
+                  onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md min-h-[120px]"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Дата</label>
+                <input
+                  type="text"
+                  value={newsForm.date}
+                  onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="15 октября 2025"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={editingNews ? handleUpdateNews : handleCreateNews}
+                  className="flex-1"
+                >
+                  {editingNews ? 'Сохранить' : 'Создать'}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowNewsEditor(false);
+                    setEditingNews(null);
+                    setNewsForm({ title: '', description: '', content: '', date: '' });
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Отмена
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <footer className="bg-primary text-white mt-12">
         <div className="container mx-auto px-4 py-6">
