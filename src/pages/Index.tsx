@@ -163,7 +163,7 @@ const Index = () => {
               <div className="flex items-center gap-6">
                 <div className="bg-white p-4 rounded-lg">
                   <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Coat_of_Arms_of_the_Russian_Federation.svg/800px-Coat_of_Arms_of_the_Russian_Federation.svg.png"
+                    src="https://cdn.poehali.dev/files/2aa67f86-4472-46b1-8e13-53ba7235e7d0.png"
                     alt="Герб России"
                     className="w-20 h-20 object-contain"
                   />
@@ -468,7 +468,7 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Coat_of_Arms_of_the_Russian_Federation.svg/800px-Coat_of_Arms_of_the_Russian_Federation.svg.png"
+                src="https://cdn.poehali.dev/files/2aa67f86-4472-46b1-8e13-53ba7235e7d0.png"
                 alt="Герб"
                 className="w-12 h-12 object-contain"
               />
