@@ -122,24 +122,6 @@ const Index = () => {
       rank: 'Генерал-лейтенант полиции',
       organization: 'ГУОБДД',
     },
-    {
-      name: 'Alik_Revazov',
-      position: 'Начальник структуры ГУВД',
-      rank: 'С 05.06.2025',
-      organization: 'ГУВД',
-    },
-    {
-      name: 'Alik_Revazov',
-      position: 'Начальник ГУВД по городу Приволжск',
-      rank: 'С 10.12.2024',
-      organization: 'ГУВД',
-    },
-    {
-      name: 'Vavilon_Lopatin',
-      position: 'Начальник ГУВД по городу Мирный',
-      rank: 'С 08.10.2025',
-      organization: 'ГУВД',
-    },
   ];
 
   const departments = [
@@ -248,7 +230,7 @@ const Index = () => {
                 <Icon name="UserCircle" className="text-primary" size={28} />
                 <CardTitle className="text-2xl">Руководство</CardTitle>
               </div>
-              <CardDescription>Руководящий состав ГИБДД и ГУОБДД</CardDescription>
+              <CardDescription>Руководящий состав ГУОБДД</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {leadershipItems.map((leader, index) => (
