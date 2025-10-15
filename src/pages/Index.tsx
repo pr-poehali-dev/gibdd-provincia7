@@ -468,8 +468,8 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <img 
-                src="https://cdn.poehali.dev/files/2aa67f86-4472-46b1-8e13-53ba7235e7d0.png"
-                alt="Герб"
+                src="https://cdn.poehali.dev/files/75e0131c-95a0-4d3b-af52-1b849e8128d1.jpg"
+                alt="Герб ГИБДД"
                 className="w-12 h-12 object-contain"
               />
               <div>
